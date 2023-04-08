@@ -1,0 +1,44 @@
+version: "3"
+services:
+  db:
+    image: "postgres:13.1"
+    container_name: nktolmin_db
+    environment:
+      POSTGRES_USER: nktolmin
+      POSTGRES_PASSWORD: nktolmin
+      PGDATA: /var/lib/postgresql/data/nktolmin/
+      ALLOW_IP_RANGE: 0.0.0.0/0
+    ports:
+      - "5432:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-U", "nktolmin"]
+
+  redis:
+    image: "redis:alpine"
+    container_name: nktolmin_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+
+  # worker:
+  #     image: redis:alpine
+  #     depends_on:
+  #         - redis
+  #     command: rq worker --url redis://redis:6379
+  #     links:
+  #         - redis
+
+volumes:
+  database:
+    name: nktolmin_database
+  redis:
+    name: nktolmin_redis
+
+# networks:
+#   app-network:
+#     driver: bridge

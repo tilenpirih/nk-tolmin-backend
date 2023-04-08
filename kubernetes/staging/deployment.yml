@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-staging
+  namespace: nk-tolmin
+  labels:
+    app: backend-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-staging
+  template:
+    metadata:
+      labels:
+        app: backend-staging
+    spec:
+      containers:
+      - name: worker-staging
+        image: localhost:32000/nk-tolmin/backend:staging
+        imagePullPolicy: Always
+        command: ["rq", "worker"]
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "500m"
+        env:
+        - name: REDIS_HOST
+          value: "redis-master.nk-tolmin"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis
+              key: redis-password
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: nk-tolmin-staging-secrets
+              key: database-host
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: nk-tolmin-staging-secrets
+              key: database-name
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: nk-tolmin-staging-secrets
+              key: database-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nk-tolmin-staging-secrets
+              key: database-password
+        - name: BASE_URL
+          value: "https://nktolmin.ventic.tv/"
+      - name: backend-staging
+        image: localhost:32000/nk-tolmin/backend:staging
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "500m"
+        volumeMounts:
+        - mountPath: /app/assets
+          name: assets
+        env:
+        - name: REDIS_HOST
+          value: "redis-master.nk-tolmin"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis
+              key: redis-password
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: nk-tolmin-staging-secrets
+              key: database-host
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: nk-tolmin-staging-secrets
+              key: database-name
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: nk-tolmin-staging-secrets
+              key: database-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nk-tolmin-staging-secrets
+              key: database-password
+        - name: BASE_URL
+          value: "https://nktolmin.ventic.tv/"
+      volumes:
+      - name: assets
+        hostPath:
+          path: /opt/nk-tolmin/staging/assets
+          type: Directory
